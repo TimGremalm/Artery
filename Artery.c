@@ -77,7 +77,8 @@ void e131task(void *pvParameters) {
 
 void lighttask(void *pvParameters) {
 	while(1) {
-		vTaskDelay(1);
+		printf("Channel 1: %d\n", pwbuff->property_values[1]);
+		vTaskDelay(100);
 	}
 }
 
