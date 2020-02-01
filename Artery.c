@@ -2,6 +2,8 @@
 #include "esp/uart.h"
 
 #include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -16,6 +18,7 @@
 
 #include "ssid_config.h"
 
+#include "ws2812_i2s/ws2812_i2s.h"
 #include "E131.h"
 
 e131_packet_t pbuff; /* Packet buffer */
@@ -76,9 +79,20 @@ void e131task(void *pvParameters) {
 }
 
 void lighttask(void *pvParameters) {
+	//NodeMCU D9 GPIO3 I2S https://github.com/nodemcu/nodemcu-devkit-v1.0#pin-map
+	uint32_t led_number = 12;
+	ws2812_pixel_t pixels[led_number];
+	ws2812_i2s_init(led_number, PIXEL_RGB);
+	memset(pixels, 0, sizeof(ws2812_pixel_t) * led_number);
+
 	while(1) {
 		printf("Channel 1: %d\n", pwbuff->property_values[1]);
-		vTaskDelay(100);
+		ws2812_pixel_t color = { {255, 0, 0, 0} };
+		for (int i = 0; i < led_number; i++) {
+			pixels[i] = color;
+		}
+		ws2812_i2s_update(pixels, PIXEL_RGB);
+		vTaskDelay(50 / portTICK_PERIOD_MS);
 	}
 }
 
