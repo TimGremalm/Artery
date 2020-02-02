@@ -20,6 +20,7 @@
 
 #include "ws2812_i2s/ws2812_i2s.h"
 #include "E131.h"
+#include "hsl_rgb.h"
 
 e131_packet_t pbuff; /* Packet buffer */
 e131_packet_t *pwbuff; /* Pointer to working packet buffer */
@@ -86,10 +87,10 @@ void lighttask(void *pvParameters) {
 	memset(pixels, 0, sizeof(ws2812_pixel_t) * led_number);
 
 	while(1) {
-		printf("Channel 1: %d\n", pwbuff->property_values[1]);
-		ws2812_pixel_t color = { {255, 0, 0, 0} };
+		uint8_t lightness = pwbuff->property_values[1];
+		printf("Channel 1: %d\n", lightness);
 		for (int i = 0; i < led_number; i++) {
-			pixels[i] = color;
+			pixels[i] = hslToRgb(0, 1.0, (float)lightness/255);
 		}
 		ws2812_i2s_update(pixels, PIXEL_RGB);
 		vTaskDelay(50 / portTICK_PERIOD_MS);
