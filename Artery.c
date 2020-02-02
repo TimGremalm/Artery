@@ -146,6 +146,8 @@ void lighttask(void *pvParameters) {
 	int segment_pixels;
 	int segment_index;
 	float segment_offset = 0.0;
+	float pixel_lightlevel;
+	float pixel_rest;
 
 	while(1) {
 		beat_parameters = readparametersfromdmx(dmx_address);
@@ -157,10 +159,19 @@ void lighttask(void *pvParameters) {
 		for (int i = 0; i < led_number; i++) {
 			segment_index = (abs(i-(int)segment_offset+segment_pixels)) % segment_pixels;
 			if (segment_index < beat_parameters.pulse_width) {
-				pixels[i] = hslToRgb(beat_parameters.pulse_hue, 1.0, beat_parameters.pulse_light_max);
+				pixel_lightlevel = beat_parameters.pulse_light_max;
+				pixel_rest = segment_offset - (int)segment_offset;
+				// Fade out/in first/last pixel in segment for smoother transition
+				if (segment_index == 0) {
+					pixel_lightlevel = pixel_lightlevel * (1-pixel_rest);
+				}
+				if (segment_index == beat_parameters.pulse_width-1) {
+					pixel_lightlevel = pixel_lightlevel * pixel_rest;
+				}
 			} else {
-				pixels[i] = hslToRgb(beat_parameters.pulse_hue, 1.0, 0.0);
+				pixel_lightlevel = 0;
 			}
+			pixels[i] = hslToRgb(beat_parameters.pulse_hue, 1.0, pixel_lightlevel);
 		}
 		ws2812_i2s_update(pixels, PIXEL_RGB);
 		vTaskDelay(50 / portTICK_PERIOD_MS);
