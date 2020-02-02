@@ -103,10 +103,10 @@ void init_dmx_values(int dmx_address) {
 	pwbuff->property_values[dmx_address+DMX_LIGHT_MAX] = 10;
 	pwbuff->property_values[dmx_address+DMX_LIGHT_MIN] = 10;
 	pwbuff->property_values[dmx_address+DMX_HUE] = 0;
-	pwbuff->property_values[dmx_address+DMX_WIDTH] = 2;
-	pwbuff->property_values[dmx_address+DMX_GAP] = 4;
+	pwbuff->property_values[dmx_address+DMX_WIDTH] = 4;
+	pwbuff->property_values[dmx_address+DMX_GAP] = 10;
 	pwbuff->property_values[dmx_address+DMX_BPM] = 128;
-	pwbuff->property_values[dmx_address+DMX_FLOW] = 1;
+	pwbuff->property_values[dmx_address+DMX_FLOW] = 30;
 }
 
 beat_parameters_t readparametersfromdmx(int dmx_address) {
@@ -152,6 +152,7 @@ void lighttask(void *pvParameters) {
 	while(1) {
 		beat_parameters = readparametersfromdmx(dmx_address);
 		segment_pixels = beat_parameters.pulse_width + beat_parameters.pulse_gap;
+		// By offseting segments a movement can be created
 		segment_offset += (float)beat_parameters.pulse_flow / 100;
 		if (segment_offset > segment_pixels || segment_offset < -segment_pixels) {
 			segment_offset = 0;
