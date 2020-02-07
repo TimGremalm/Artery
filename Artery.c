@@ -25,6 +25,12 @@
 e131_packet_t pbuff; /* Packet buffer */
 e131_packet_t *pwbuff; /* Pointer to working packet buffer */
 
+#define min(x, y) (((x) < (y)) ? (x) : (y))
+#define max(a,b) \
+	({ __typeof__ (a) _a = (a); \
+	__typeof__ (b) _b = (b); \
+	_a > _b ? _a : _b; })
+
 void e131task(void *pvParameters) {
 	printf("Open server.\r\n");
 	vTaskDelay(1000);
@@ -197,7 +203,8 @@ void lighttask(void *pvParameters) {
 				if (segment_index == beat_parameters.pulse_width-1) {
 					pixel_lightlevel = pixel_lightlevel * pixel_rest;
 				}
-				pixel_lightlevel = pixel_lightlevel * beat_level;
+				// Light level with beat level, but cap it to light min level
+				pixel_lightlevel = max(pixel_lightlevel * beat_level, beat_parameters.pulse_light_min);
 			} else {
 				pixel_lightlevel = 0;
 			}
