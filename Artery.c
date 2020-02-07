@@ -142,14 +142,14 @@ void lighttask(void *pvParameters) {
 	ws2812_pixel_t pixels[led_number];
 	ws2812_i2s_init(led_number, PIXEL_RGB);
 	memset(pixels, 0, sizeof(ws2812_pixel_t) * led_number);
-	beat_parameters_t beat_parameters;
+	beat_parameters_t beat_parameters = {0};
+	uint8_t bpm_last = 0;
 	int segment_pixels;
 	int segment_index;
 	float segment_offset = 0.0;
 	float pixel_lightlevel;
 	float pixel_rest;
 	float beat_level;
-	uint32_t beat_start = 0;
 	uint32_t beat_mid = 0;
 	uint32_t beat_end = 0;
 	uint32_t now;
@@ -157,18 +157,15 @@ void lighttask(void *pvParameters) {
 	uint32_t diff;
 
 	while(1) {
+		// Timing of beats
+		bpm_last = beat_parameters.pulse_bpm;
 		beat_parameters = readparametersfromdmx(dmx_address);
-
-		// Calculate beat, and light level on beat
-		//printf("Tick %d\n", xTaskGetTickCount()*portTICK_PERIOD_MS);
 		now = xTaskGetTickCount()*portTICK_PERIOD_MS;
 		beatms = (((float)60/beat_parameters.pulse_bpm)*1000)/2;
-		if (now > beat_end) {
-			// Calculate next beat
-			beat_start = now;
+		// If beat pastt, or BPM value changed, calculate next beat
+		if (now > beat_end || beat_parameters.pulse_bpm != bpm_last) {
 			beat_mid = now + beatms;
 			beat_end = beat_mid + beatms;
-			//printf("Double beat %d %d\n", beatms, beat_end);
 		}
 		if (now < beat_mid) {
 			// Start of beat, go up
@@ -179,7 +176,6 @@ void lighttask(void *pvParameters) {
 			diff = beat_end - now;
 			beat_level = 1.0 - ((float)diff / beatms);
 		}
-		//printf("Beat level %f\n", beat_level);
 
 		// By offseting segments a movement can be created
 		segment_pixels = beat_parameters.pulse_width + beat_parameters.pulse_gap;
